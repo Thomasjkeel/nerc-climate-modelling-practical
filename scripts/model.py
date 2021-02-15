@@ -1,6 +1,3 @@
-import numpy as np
-from lmfit import Model
-
 # set constants
 
 rho = 1000 # density of water kgm-3
@@ -38,27 +35,3 @@ def surface_ocean_temp(t, A, B, F, alpha):
     T_u = A * np.exp(lambda1*t_s) + B * np.exp(lambda2*t_s) + F/alpha
     
     return T_u
-
-
-# array for time, in years and seconds
-
-t = np.array(range(0,171), dtype='int64')
-
-
-# Now make a model that fits function for upper ocean temperature to the temperature anomaly data
-# in order to find parameters for function that give the best fit using least squares approach
-
-mod = Model(surface_ocean_temp)
-params = mod.make_params(A=-1,B=-1,F=2,alpha=1)
-
-# need to constrain the parameters as A + B = -F/alpha
-params['F'].expr = '-alpha*(A+B)'
-
-# Radiative forcing must be positive
-params['F'].min = 0
-# Alpha is 1.04+-0.36 from CMIP6 (in slides)
-params['alpha'].min = 0.68
-params['alpha'].max = 1.40
-
-result = mod.fit(temp_anom, params, t=t, method='least_squares')
-
