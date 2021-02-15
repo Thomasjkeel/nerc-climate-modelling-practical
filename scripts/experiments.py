@@ -49,6 +49,8 @@ def main():
     data_dir = '../data'
     filename = 'hadCRUT_data.txt'
     data_path = os.path.join(data_dir, filename)
+    ## Forcing sensitivity
+    FORCING_SENSITIVITY = 1
     # array for time, in years and seconds
     t = np.array(range(0,171), dtype='int64')
     years = t + 1850
@@ -57,7 +59,8 @@ def main():
 
     ERF_data = pd.read_csv(os.path.join(data_dir, 'ERF_ssp585_1750-2500.csv'))
     ERF_data = ERF_data.set_index('year')
-    ERF = ERF_data.loc[1850:2020]['total']
+    ERF = np.array(ERF_data.loc[1850:2020]['total']) * FORCING_SENSITIVITY
+    ERF_fut = np.array(ERF_data.loc[1850:2120]['total'] * FORCING_SENSITIVITY)
 
     data_used = load_data(data_path)
     temp_anom = calc_anomaly(data_used, num_years=171)
@@ -65,18 +68,12 @@ def main():
     fitted_model, params = fit_model(temp_anom, surface_ocean_temp, t=t)
 
     ## SET CONSTRAINTS
-    # # need to constrain the parameters as A + B = -F/alpha
-    # params['F'].expr = '-alpha*(A+B)'
-    # Radiative forcing must be positive
-    # params['F'].min = 0
     # Alpha is 1.04+-0.36 from CMIP6 (in slides)
     params['alpha'].min = 0.68
     params['alpha'].max = 1.40
     # best fit parameters from model
     A = fitted_model.params['A'].value
     B = fitted_model.params['B'].value
-    # F = fitted_model.params['F'].value
-    ERF_fut = np.array(ERF_data.loc[1850:2120]['total'] * 1.25)
     
     alpha = fitted_model.params['alpha'].value
     projection = surface_ocean_temp(t=t_fut, A=A, B=B, F=ERF_fut, alpha=alpha)
@@ -84,7 +81,7 @@ def main():
     ## plot and save ouputs
     fig, ax = plot_model(years_fut, projection, label='model')
     fig, ax = plot_model(years, temp_anom, label='HadCRUT data', fig=fig, ax=ax)
-    fig.savefig('../outputs/test2.png', bbox_inches='tight', dpi=300)
+    fig.savefig('../outputs/test3.png', bbox_inches='tight', dpi=300)
 
 
 if __name__ == '__main__':
