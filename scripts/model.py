@@ -34,5 +34,4 @@ def surface_ocean_temp(t, A, B, F, alpha):
     t_s = t*365*24*60*60 # convert time to seconds
     
     T_u = A * np.exp(lambda1*t_s) + B * np.exp(lambda2*t_s) + F/alpha
-    
     return T_u
