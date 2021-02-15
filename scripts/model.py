@@ -3,7 +3,7 @@ from lmfit import Model
 
 # set constants
 
-rho = 100 # density of water kgm-3
+rho = 1000 # density of water kgm-3
 c_p = 4218 # specific heat of water Jkg-1K-1
 kap = 1e-4 # vertical diffusivity m2s-1
 
