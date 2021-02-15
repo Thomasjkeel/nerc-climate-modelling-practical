@@ -1,5 +1,11 @@
 import numpy as np
+import pandas as pd
+import os
 # set constants
+data_dir = '../data'
+ERF_data = pd.read_csv(os.path.join(data_dir, 'ERF_ssp585_1750-2500.csv'))
+ERF_data = ERF_data.set_index('year')
+ERF = ERF_data.loc[1850:2020]['total']
 
 rho = 1000 # density of water kgm-3
 c_p = 4218 # specific heat of water Jkg-1K-1
@@ -19,9 +25,15 @@ C_d = rho*c_p*h_d # specific heat of deep ocean Jm-2K-1
 # where lambda1,2 are found using quadratic formula from homogenous 2nd order ODE solution, and
 # A and B are constants, where A + B = -F/alpha (from inhomogenous solution)
 
-def surface_ocean_temp(t, A, B, F, alpha):
+def surface_ocean_temp(t, A, B, alpha, F=None):
     # function for upper ocean temperature, T_u, with variable inputs for constants A, B, F and alpha
-    
+    try:
+        if not F:
+            F = ERF
+    except:
+        pass
+
+
     # terms for quadratic equation to solve second order ODE solution for T_u
     a = C_u/gamma
     b = (alpha+gamma)/gamma + C_u/C_d
