@@ -27,12 +27,8 @@ C_d = rho*c_p*h_d # specific heat of deep ocean Jm-2K-1
 
 def surface_ocean_temp(t, A, B, alpha, F=None):
     # function for upper ocean temperature, T_u, with variable inputs for constants A, B, F and alpha
-    try:
-        if not F:
-            F = ERF
-    except:
-        pass
-
+    if type(F) != np.array and type(F) != np.ndarray:
+        F = ERF
 
     # terms for quadratic equation to solve second order ODE solution for T_u
     a = C_u/gamma
