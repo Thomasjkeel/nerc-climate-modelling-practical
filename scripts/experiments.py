@@ -1,4 +1,5 @@
 import os 
+import pandas as pd
 import numpy as np
 import lmfit 
 from model import surface_ocean_temp
@@ -10,10 +11,10 @@ def load_data(data_path):
     data = np.loadtxt(data_path, delimiter=None, dtype=str) 
     return data
 
-def calc_anomaly(data):
+def calc_anomaly(data, num_years):
     years = np.array([])
     anom = np.array([])
-    for row in range(171):
+    for row in range(num_years):
         years = np.append(years, float(data[row][0]))
         anom = np.append(anom, float(data[row][1]))
 
@@ -22,12 +23,12 @@ def calc_anomaly(data):
     return anom
 
 
-def fit_model(data, model_used, t, **kwargs):
+def fit_model(data, model_used, t):
     # Now make a model that fits function for upper ocean temperature to the temperature anomaly data
     # in order to find parameters for function that give the best fit using least squares approach
     
     mod = lmfit.Model(model_used)
-    params = mod.make_params(**kwargs)
+    params = mod.make_params(A=-1, B=-1, F=2, alpha=1) ## parameters needed for best guess
     fitted_model = mod.fit(data, params, t=t, method='least_squares')
 
     return fitted_model, params 
@@ -55,9 +56,9 @@ def main():
     years_fut = t_fut + 1850
 
     data_used = load_data(data_path)
-    temp_anom = calc_anomaly(data_used)
+    temp_anom = calc_anomaly(data_used, num_years=171)
     
-    fitted_model, params = fit_model(temp_anom, surface_ocean_temp, t=t, A=-1, B=-1, F=2, alpha=1)
+    fitted_model, params = fit_model(temp_anom, surface_ocean_temp, t=t)
 
     ## SET CONSTRAINTS
     # need to constrain the parameters as A + B = -F/alpha
@@ -74,9 +75,10 @@ def main():
     F = fitted_model.params['F'].value
     alpha = fitted_model.params['alpha'].value
 
+    F = np.arange(0,271)
+    ERF = pd.read_csv(os.path.join(data_dir, 'ERF_ssp585_1750-2500.csv'))
     projection = surface_ocean_temp(t=t_fut, A=A, B=B, F=F, alpha=alpha)
 
-    print(temp_anom)
     ## plot and save ouputs
     fig, ax = plot_model(years_fut, projection, label='model')
     fig, ax = plot_model(years, temp_anom, label='HadCRUT data', fig=fig, ax=ax)
