@@ -1,3 +1,4 @@
+import numpy as np
 # set constants
 
 rho = 1000 # density of water kgm-3
