@@ -89,11 +89,7 @@ def main():
         # lower_alpha_proj = model.upper_ocean_temp(t=len(ERF_fut), alpha=lower_alpha, F=ERF_fut)
         ## plot and save ouputs
         fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-4]), fig=fig, ax=ax)
-        # fig, ax = plot_model(years_fut, projection+upper_conf, label='%s upper' % (scen_file[:-4]), fig=fig, ax=ax)
-        # fig, ax = plot_model(years_fut, projection+lower_conf, label='%s lower' % (scen_file[:-4]), fig=fig, ax=ax)
-        # fig, ax = plot_model(years_fut, projection+(2*st_dev), label='%s st_dev above' % (scen_file[:-4]), fig=fig, ax=ax)
-        # fig, ax = plot_model(years_fut, projection-(2*st_dev), label='%s st_dev below' % (scen_file[:-4]), fig=fig, ax=ax)
-        break
+
     fig.savefig('outputs/upper_ocean_projection.png', bbox_inches='tight', dpi=300)
 
 
