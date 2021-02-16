@@ -75,7 +75,7 @@ def main():
 
         ## plot and save ouputs
         fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-3]), fig=fig, ax=ax)
-    fig.savefig('outputs/test3.png', bbox_inches='tight', dpi=300)
+    fig.savefig('outputs/upper_ocean_projection.png', bbox_inches='tight', dpi=300)
 
 
 if __name__ == '__main__':
