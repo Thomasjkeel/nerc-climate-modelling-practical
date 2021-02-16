@@ -1,11 +1,13 @@
 import numpy as np
 import pandas as pd
 import os
+import lmfit
+
 # set constants
-data_dir = '../data'
-ERF_data = pd.read_csv(os.path.join(data_dir, 'ERF_ssp585_1750-2500.csv'))
+data_dir = 'data'
+ERF_data = pd.read_csv(os.path.join(data_dir, 'SSPs/','ERF_ssp585_1750-2500.csv'))
 ERF_data = ERF_data.set_index('year')
-ERF = ERF_data.loc[1850:2020]['total']
+ERF = np.array(ERF_data.loc[1850:2020]['total'])
 
 rho = 1000 # density of water kgm-3
 c_p = 4218 # specific heat of water Jkg-1K-1
@@ -45,4 +47,4 @@ def opt_alpha(temp_anom, t=171):
     params = mod.make_params(alpha=1)
     fit_result = mod.fit(temp_anom, params, t=t)
     
-    return result.params['alpha'].value
+    return fit_result.params['alpha'].value
