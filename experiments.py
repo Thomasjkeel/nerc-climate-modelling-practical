@@ -82,11 +82,12 @@ def main():
         ERF, ERF_fut = load_forcing_data(forcing_scenario_path)
         alpha_val, alpha_stderr = model.get_opt_model(temp_anom=temp_anom, F=ERF)
         # upper_alpha, lower_alpha = calc_confidence_interval(alpha_val, alpha_stderr)
-
-        projection = model.upper_ocean_temp(t=len(ERF_fut), alpha=alpha_val, F=ERF_fut)
-        upper_conf, lower_conf = calc_confidence_interval(projection)
         # upper_alpha_proj = model.upper_ocean_temp(t=len(ERF_fut), alpha=upper_alpha, F=ERF_fut)
         # lower_alpha_proj = model.upper_ocean_temp(t=len(ERF_fut), alpha=lower_alpha, F=ERF_fut)
+        
+        projection = model.upper_ocean_temp(t=len(ERF_fut), alpha=alpha_val, F=ERF_fut)
+        upper_conf, lower_conf = calc_confidence_interval(projection)
+
         ## plot and save ouputs
         fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-4]), fig=fig, ax=ax)
 
