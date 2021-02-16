@@ -39,13 +39,11 @@ def load_forcing_data(filename):
     ERF_data = pd.read_csv(filename)
     ERF_data = ERF_data.set_index('year')
 
-    print(ERF_data['total'].loc[2024:2100])
     past_volcanic_record = len(ERF_data['volcanic'].loc[1850:2024]) 
     new_vals = list(ERF_data['total'].loc[:2024].values)
     new_vals.extend(ERF_data['total'].loc[2025:2024+past_volcanic_record].values + ERF_data['volcanic'].loc[1850:2024].values)
     new_vals.extend(ERF_data['total'].loc[2024+past_volcanic_record+1:].values)
     ERF_data['total'] = new_vals
-    print(ERF_data['total'].loc[2024:2100])
 
     ERF = np.array(ERF_data.loc[1850:2020]['total']) * FORCING_SENSITIVITY
     ERF_fut = np.array(ERF_data.loc[1850:2100]['total'] * FORCING_SENSITIVITY)
@@ -98,7 +96,7 @@ def main():
 
         ## plot and save ouputs
         fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-4]), fig=fig, ax=ax)
-    fig.savefig('outputs/upper_ocean_projection_volcanic3.png', bbox_inches='tight', dpi=300)
+    fig.savefig('outputs/upper_ocean_projection_volcanic.png', bbox_inches='tight', dpi=300)
 
 
 if __name__ == '__main__':
