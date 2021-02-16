@@ -3,7 +3,7 @@ import pandas as pd
 import os
 # set constants
 data_dir = '../data'
-ERF_data = pd.read_csv(os.path.join(data_dir, 'ERF_ssp585_1750-2500.csv'))
+ERF_data = pd.read_csv(os.path.join(data_dir, 'SSPs/ERF_ssp585_1750-2500.csv'))
 ERF_data = ERF_data.set_index('year')
 ERF = ERF_data.loc[1850:2020]['total']
 
@@ -34,12 +34,13 @@ def surface_ocean_temp(t, A, B, alpha, F=None):
     a = C_u/gamma
     b = (alpha+gamma)/gamma + C_u/C_d
     c = (alpha+gamma)/C_d - gamma/C_d
-    
     # exponential coefficients for T_u solution using quadratic formula
     lambda1 = (-b + np.sqrt(b**2 - 4*a*c))/(2*a)
     lambda2 = (-b - np.sqrt(b**2 - 4*a*c))/(2*a)
+
+    T_u = []
+    for t_step, f_step in zip(t, F):
+        t_s = t_step*365*24*60*60 # convert time to seconds
+        T_u.append(A * np.exp(lambda1*t_step) + B * np.exp(lambda2*t_step) + f_step/alpha)
     
-    t_s = t*365*24*60*60 # convert time to seconds
-    
-    T_u = A * np.exp(lambda1*t_s) + B * np.exp(lambda2*t_s) + F/alpha
     return T_u

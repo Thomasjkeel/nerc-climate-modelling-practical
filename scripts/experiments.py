@@ -2,8 +2,11 @@ import os
 import pandas as pd
 import numpy as np
 import lmfit 
-from model import surface_ocean_temp
+from model import surface_ocean_temp as upper_ocean_temp
 import matplotlib.pyplot as plt
+
+## GLOBALS
+FORCING_SENSITIVITY = 1
 
 ## load in data (Move to get_data_func)
 def load_data(data_path):
@@ -44,43 +47,56 @@ def plot_model(years, model,  label, ax=None, fig=None):
     return fig, ax
 
 
+def load_forcing_data(filename):
+    ERF_data = pd.read_csv(filename)
+    ERF_data = ERF_data.set_index('year')
+    ERF = np.array(ERF_data.loc[1850:2020]['total']) * FORCING_SENSITIVITY
+    ERF_fut = np.array(ERF_data.loc[1850:2120]['total'] * FORCING_SENSITIVITY)
+    return ERF, ERF_fut
+
 def main():
-    ## GLOBALS
-    data_dir = '../data'
-    filename = 'hadCRUT_data.txt'
-    data_path = os.path.join(data_dir, filename)
-    ## Forcing sensitivity
-    FORCING_SENSITIVITY = 1
     # array for time, in years and seconds
     t = np.array(range(0,171), dtype='int64')
     years = t + 1850
     t_fut = np.array(range(0,271), dtype='int64')
     years_fut = t_fut + 1850
 
-    ERF_data = pd.read_csv(os.path.join(data_dir, 'ERF_ssp585_1750-2500.csv'))
-    ERF_data = ERF_data.set_index('year')
-    ERF = np.array(ERF_data.loc[1850:2020]['total']) * FORCING_SENSITIVITY
-    ERF_fut = np.array(ERF_data.loc[1850:2120]['total'] * FORCING_SENSITIVITY)
+    ## file locations
+    data_dir = '../data'
+    filename = 'hadCRUT_data.txt'
+    path_to_ssp_forcings = os.path.join(data_dir, 'SSPs/')
 
-    data_used = load_data(data_path)
-    temp_anom = calc_anomaly(data_used, num_years=171)
+    ## load data and calc temperature anomaly
+    data_path = os.path.join(data_dir, filename)
+    model_data_used = load_data(data_path)
+    temp_anom = calc_anomaly(model_data_used, num_years=171)
     
-    fitted_model, params = fit_model(temp_anom, surface_ocean_temp, t=t)
+    ## initialise_plot
+    fig, ax = plt.subplots(1)
 
-    ## SET CONSTRAINTS
-    # Alpha is 1.04+-0.36 from CMIP6 (in slides)
-    params['alpha'].min = 0.68
-    params['alpha'].max = 1.40
-    # best fit parameters from model
-    A = fitted_model.params['A'].value
-    B = fitted_model.params['B'].value
+    ## run model under different forcing scenarios
+    for scen_file in os.listdir(path_to_ssp_forcings):
+        print(scen_file)
+        forcing_scenario_path = os.path.join(path_to_ssp_forcings, scen_file)
+        ERF, ERF_fut = load_forcing_data(forcing_scenario_path)
+
     
-    alpha = fitted_model.params['alpha'].value
-    projection = surface_ocean_temp(t=t_fut, A=A, B=B, F=ERF_fut, alpha=alpha)
-    print(projection)
-    ## plot and save ouputs
-    fig, ax = plot_model(years_fut, projection, label='model')
-    fig, ax = plot_model(years, temp_anom, label='HadCRUT data', fig=fig, ax=ax)
+        fitted_model, params = fit_model(temp_anom, upper_ocean_temp, t=t)
+
+        ## SET CONSTRAINTS
+        # Alpha is 1.04+-0.36 from CMIP6 (in slides)
+        params['alpha'].min = 0.68
+        params['alpha'].max = 1.40
+        # best fit parameters from model
+        A = fitted_model.params['A'].value
+        B = fitted_model.params['B'].value
+        
+        alpha = fitted_model.params['alpha'].value
+        projection = upper_ocean_temp(t=t_fut, A=A, B=B, F=ERF_fut, alpha=alpha)
+
+        ## plot and save ouputs
+        fig, ax = plot_model(years_fut, projection, label='model', fig=fig, ax=ax)
+        fig, ax = plot_model(years, temp_anom, label='HadCRUT data', fig=fig, ax=ax)
     fig.savefig('../outputs/test3.png', bbox_inches='tight', dpi=300)
 
 
