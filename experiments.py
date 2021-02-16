@@ -74,7 +74,7 @@ def main():
         projection = model.upper_ocean_temp(t=len(ERF_fut), alpha=opt_alpha_val, F=ERF_fut)
 
         ## plot and save ouputs
-        fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-3]), fig=fig, ax=ax)
+        fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-4]), fig=fig, ax=ax)
     fig.savefig('outputs/upper_ocean_projection.png', bbox_inches='tight', dpi=300)
 
 
