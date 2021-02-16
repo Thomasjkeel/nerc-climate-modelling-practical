@@ -72,10 +72,14 @@ def main():
         forcing_scenario_path = os.path.join(path_to_ssp_forcings, scen_file)
         ERF, ERF_fut = load_forcing_data(forcing_scenario_path)
         projection = model.upper_ocean_temp(t=len(ERF_fut), alpha=opt_alpha_val, F=ERF_fut)
+        proj_upper = model.upper_ocean_temp(t=len(ERF_fut), alpha=opt_alpha_val+1.96*0.048, F=ERF_fut)
+        proj_lower = model.upper_ocean_temp(t=len(ERF_fut), alpha=opt_alpha_val-1.96*0.048, F=ERF_fut)
 
         ## plot and save ouputs
         fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-3]), fig=fig, ax=ax)
-    fig.savefig('outputs/test3.png', bbox_inches='tight', dpi=300)
+        fig, ax = plot_model(years_fut, proj_upper, label=None, fig=fig, ax=ax)
+        fig, ax = plot_model(years_fut, proj_lower, label=None, fig=fig, ax=ax)
+    fig.savefig('outputs/test9.png', bbox_inches='tight', dpi=300)
 
 
 if __name__ == '__main__':
