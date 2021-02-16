@@ -40,14 +40,14 @@ def load_forcing_data(filename):
     ERF_data = pd.read_csv(filename)
     ERF_data = ERF_data.set_index('year')
     ERF = np.array(ERF_data.loc[1850:2020]['total']) * FORCING_SENSITIVITY
-    ERF_fut = np.array(ERF_data.loc[1850:2120]['total'] * FORCING_SENSITIVITY)
+    ERF_fut = np.array(ERF_data.loc[1850:2100]['total'] * FORCING_SENSITIVITY)
     return ERF, ERF_fut
 
 def main():
     # array for time, in years and seconds
     t = np.array(range(0,171), dtype='int64')
     years = t + 1850
-    t_fut = np.array(range(0,271), dtype='int64')
+    t_fut = np.array(range(0,251), dtype='int64')
     years_fut = t_fut + 1850
     
 
@@ -61,6 +61,8 @@ def main():
     model_data_used = load_data(data_path)
     temp_anom = calc_anomaly(model_data_used, num_years=171)
     
+    opt_alpha_val = model.opt_alpha(temp_anom)
+
     ## initialise_plot
     fig, ax = plt.subplots(1, figsize=(10,10))
     fig, ax = plot_model(years, temp_anom, label='HadCRUT temperature  anomaly', fig=fig, ax=ax)
@@ -69,8 +71,7 @@ def main():
     for scen_file in os.listdir(path_to_ssp_forcings):
         forcing_scenario_path = os.path.join(path_to_ssp_forcings, scen_file)
         ERF, ERF_fut = load_forcing_data(forcing_scenario_path)
-        model.upper_ocean_temp(alpha=1, F=ERF_fut)
-        projection = model.upper_ocean_temp(alpha=1, F=ERF_fut)
+        projection = model.upper_ocean_temp(t=len(ERF_fut), alpha=opt_alpha_val, F=ERF_fut)
 
         ## plot and save ouputs
         fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-3]), fig=fig, ax=ax)
