@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 import lmfit 
-from model import surface_ocean_temp as upper_ocean_temp
+from scripts.model.py import surface_ocean_temp as upper_ocean_temp 
 import matplotlib.pyplot as plt
 
 ## GLOBALS
@@ -24,17 +24,6 @@ def calc_anomaly(data, num_years):
     # convert to temperature anomaly from 1850
     anom = anom - anom[0]
     return anom
-
-
-def fit_model(data, model_used, t):
-    # Now make a model that fits function for upper ocean temperature to the temperature anomaly data
-    # in order to find parameters for function that give the best fit using least squares approach
-    
-    mod = lmfit.Model(model_used)
-    params = mod.make_params(A=-1, B=-1, alpha=1) ## parameters needed for best guess
-    fitted_model = mod.fit(data, params, t=t, method='least_squares')
-
-    return fitted_model, params 
 
 
 def plot_model(years, model,  label, ax=None, fig=None):
@@ -62,7 +51,7 @@ def main():
     years_fut = t_fut + 1850
 
     ## file locations
-    data_dir = '../data'
+    data_dir = 'data'
     filename = 'hadCRUT_data.txt'
     path_to_ssp_forcings = os.path.join(data_dir, 'SSPs/')
 
@@ -80,24 +69,13 @@ def main():
         forcing_scenario_path = os.path.join(path_to_ssp_forcings, scen_file)
         ERF, ERF_fut = load_forcing_data(forcing_scenario_path)
 
-    
-        fitted_model, params = fit_model(temp_anom, upper_ocean_temp, t=t)
-
-        ## SET CONSTRAINTS
-        # Alpha is 1.04+-0.36 from CMIP6 (in slides)
-        params['alpha'].min = 0.68
-        params['alpha'].max = 1.40
-        # best fit parameters from model
-        A = fitted_model.params['A'].value
-        B = fitted_model.params['B'].value
-        
-        alpha = fitted_model.params['alpha'].value
-        projection = upper_ocean_temp(t=t_fut, A=A, B=B, F=ERF_fut, alpha=alpha)
+        upper_ocean_temp(F=ERF_fut, alpha=alpha)
+        projection = upper_ocean_temp(F=ERF_fut, alpha=alpha)
 
         ## plot and save ouputs
         fig, ax = plot_model(years_fut, projection, label='model', fig=fig, ax=ax)
         fig, ax = plot_model(years, temp_anom, label='HadCRUT data', fig=fig, ax=ax)
-    fig.savefig('../outputs/test3.png', bbox_inches='tight', dpi=300)
+    fig.savefig('outputs/test3.png', bbox_inches='tight', dpi=300)
 
 
 if __name__ == '__main__':
