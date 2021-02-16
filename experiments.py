@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 import lmfit 
-from scripts.model.py import surface_ocean_temp as upper_ocean_temp 
+from scripts import model
 import matplotlib.pyplot as plt
 
 ## GLOBALS
@@ -49,9 +49,10 @@ def main():
     years = t + 1850
     t_fut = np.array(range(0,271), dtype='int64')
     years_fut = t_fut + 1850
+    
 
     ## file locations
-    data_dir = 'data'
+    data_dir = './data'
     filename = 'hadCRUT_data.txt'
     path_to_ssp_forcings = os.path.join(data_dir, 'SSPs/')
 
@@ -61,20 +62,18 @@ def main():
     temp_anom = calc_anomaly(model_data_used, num_years=171)
     
     ## initialise_plot
-    fig, ax = plt.subplots(1)
+    fig, ax = plt.subplots(1, figsize=(10,10))
+    fig, ax = plot_model(years, temp_anom, label='HadCRUT temperature  anomaly', fig=fig, ax=ax)
 
     ## run model under different forcing scenarios
     for scen_file in os.listdir(path_to_ssp_forcings):
-        print(scen_file)
         forcing_scenario_path = os.path.join(path_to_ssp_forcings, scen_file)
         ERF, ERF_fut = load_forcing_data(forcing_scenario_path)
-
-        upper_ocean_temp(F=ERF_fut, alpha=alpha)
-        projection = upper_ocean_temp(F=ERF_fut, alpha=alpha)
+        model.upper_ocean_temp(alpha=1, F=ERF_fut)
+        projection = model.upper_ocean_temp(alpha=1, F=ERF_fut)
 
         ## plot and save ouputs
-        fig, ax = plot_model(years_fut, projection, label='model', fig=fig, ax=ax)
-        fig, ax = plot_model(years, temp_anom, label='HadCRUT data', fig=fig, ax=ax)
+        fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-3]), fig=fig, ax=ax)
     fig.savefig('outputs/test3.png', bbox_inches='tight', dpi=300)
 
 
