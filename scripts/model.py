@@ -29,22 +29,27 @@ dt = 365*24*60*60 # seconds in year
 # where lambda1,2 are found using quadratic formula from homogenous 2nd order ODE solution, and
 # A and B are constants, where A + B = -F/alpha (from inhomogenous solution)
 
+def get_opt_model(temp_anom, F, t=171):
+    alpha_val, opt_error = opt_alpha(temp_anom=temp_anom, F=F, t=t)
+    return alpha_val, opt_error
+
 def upper_ocean_temp(t, alpha, F=None):
     if type(F) != np.array and type(F) != np.ndarray:
         F = ERF
     T_u = np.zeros(t)
     T_d = np.zeros(t)
-
+    
     for i in range(t-1):
+        # if t > 200:
+        #     alpha-= 0.001
         T_u[i+1] = (1/C_u)*(F[i] - (alpha+gamma)*T_u[i] + T_d[i])*dt + T_u[i]
         T_d[i+1] = (gamma/C_d)*(T_u[i]-T_d[i])*dt + T_d[i]
     
     return T_u
 
 
-def opt_alpha(temp_anom, t=171):
-    mod = lmfit.Model(upper_ocean_temp)
+def opt_alpha(temp_anom, F, t=171):
+    mod = lmfit.Model(upper_ocean_temp, F=F)
     params = mod.make_params(alpha=1)
     fit_result = mod.fit(temp_anom, params, t=t)
-    
-    return fit_result.params['alpha'].value
+    return fit_result.params['alpha'].value, fit_result.params['alpha'].stderr
