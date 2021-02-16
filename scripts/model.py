@@ -39,12 +39,9 @@ def upper_ocean_temp(t, alpha, F=None):
     T_u = np.zeros(t)
     T_d = np.zeros(t)
     
-    to_add = 0.05
-    added_val = 0
     for i in range(t-1):
-        # if i > 200:
-        #     F[i] -= 2
-            # added_val += to_add
+        # if i == 200:
+        #     F[i] -= 8
         T_u[i+1] = (1/C_u)*(F[i] - (alpha+gamma)*T_u[i] + T_d[i])*dt + T_u[i]
         T_d[i+1] = (gamma/C_d)*(T_u[i]-T_d[i])*dt + T_d[i]
     
