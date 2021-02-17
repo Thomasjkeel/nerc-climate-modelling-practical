@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 from scripts import model
+from scripts.model import KRAK_VALS, KRAKATOA_YEAR
 import matplotlib.pyplot as plt
 
 ## GLOBALS
@@ -20,8 +21,6 @@ def calc_anomaly(data, num_years):
         years = np.append(years, float(data[row][0]))
         anom = np.append(anom, float(data[row][1]))
 
-    # convert to temperature anomaly from 1850
-    anom = anom - anom[0]
     return anom
 
 
@@ -38,6 +37,10 @@ def plot_model(years, model,  label, ax=None, fig=None):
 def load_forcing_data(filename):
     ERF_data = pd.read_csv(filename)
     ERF_data = ERF_data.set_index('year')
+    KRAK_VALS[1883] = ERF_data['volcanic'][KRAKATOA_YEAR]
+    KRAK_VALS[1884] = ERF_data['volcanic'][KRAKATOA_YEAR+1]
+    KRAK_VALS[1885] = ERF_data['volcanic'][KRAKATOA_YEAR+2]
+    KRAK_VALS[1886] = ERF_data['volcanic'][KRAKATOA_YEAR+3]
 
     past_volcanic_record = len(ERF_data['volcanic'].loc[1850:2024]) 
     new_vals = list(ERF_data['total'].loc[:2024].values)
@@ -78,11 +81,13 @@ def main():
     temp_anom = calc_anomaly(model_data_used, num_years=171)
     
     ## initialise_plot
-    fig, ax = plt.subplots(1, figsize=(10,10))
+    fig, ax = plt.subplots(1, figsize=(10,8))
     fig, ax = plot_model(years, temp_anom, label='HadCRUT temperature  anomaly', fig=fig, ax=ax)
 
+    COLORS = []
+
     ## run model under different forcing scenarios
-    for scen_file in os.listdir(path_to_ssp_forcings):
+    for ind, scen_file in enumerate(os.listdir(path_to_ssp_forcings)):
 
         forcing_scenario_path = os.path.join(path_to_ssp_forcings, scen_file)
         ERF, ERF_fut = load_forcing_data(forcing_scenario_path)
