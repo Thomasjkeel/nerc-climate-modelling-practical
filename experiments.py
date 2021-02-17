@@ -139,6 +139,7 @@ def main(krakatwoa=False, save_filename='outputs/upper_ocean_projection_volcanic
             fig, ax = plot_model(years_fut, high_proj, fig=fig, ax=ax, alpha=.2, linestyle='--', color=COLORS[ind], legend=False)
             ax.add_patch(mpatches.Rectangle((2105,low_proj.max()),2, (high_proj.max()- low_proj.max()),facecolor=COLORS[ind],
                               clip_on=False,linewidth = 0,  alpha=.7))
+            plt.text(2110, 7, r'AR5 $\alpha$ range')
             plt.text(2108, (high_proj.max() + low_proj.max())/2, '%s – RCP %s.%s' % (scen_file[4:8].upper(), scen_file[8:9], scen_file[9:10]), color=COLORS[ind])
 
 
