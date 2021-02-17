@@ -4,9 +4,13 @@ import numpy as np
 from scripts import model
 from scripts.model import KRAK_VALS, KRAKATOA_YEAR
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 ## GLOBALS
 FORCING_SENSITIVITY = 1
+
+sns.set_context('paper')
+sns.set_style('whitegrid')
 
 ## load in data (Move to get_data_func)
 def load_data(data_path):
@@ -24,10 +28,12 @@ def calc_anomaly(data, num_years):
     return anom
 
 
-def plot_model(years, model,  label, ax=None, fig=None):
+def plot_model(years, model,  label, ax=None, fig=None, **kwargs):
     if not ax:
         fig, ax = plt.subplots(1)
-    plt.plot(years, model, label=label)
+    plt.plot(years, model, label=label, **kwargs)
+    plt.hlines(0,1850,2100, linestyle='--', color='k')
+    plt.xlim(1850, 2100)
     plt.xlabel('Year', fontsize=12)
     plt.ylabel('Temperature Anomaly (K)', fontsize=12)
     plt.legend()
@@ -81,13 +87,13 @@ def main(krakatwoa=False, save_filename='outputs/upper_ocean_projection_volcanic
     temp_anom = calc_anomaly(model_data_used, num_years=171)
     
     ## initialise_plot
-    fig, ax = plt.subplots(1, figsize=(10,8))
-    fig, ax = plot_model(years, temp_anom, label='HadCRUT temperature  anomaly', fig=fig, ax=ax)
-
-    COLORS = []
+    fig, ax = plt.subplots(1, figsize=(10,6))
+    fig, ax = plot_model(years, temp_anom, label='HadCRUT temperature  anomaly', fig=fig, ax=ax, marker='s', markersize=2, linewidth=1)
+    COLORS = ['#f7564a', '#e6ac1c', '#5963f0']
 
     ## run model under different forcing scenarios
-    for ind, scen_file in enumerate(os.listdir(path_to_ssp_forcings)):
+    scenario_files = sorted(os.listdir(path_to_ssp_forcings), reverse=True)
+    for ind, scen_file in enumerate(scenario_files):
 
         forcing_scenario_path = os.path.join(path_to_ssp_forcings, scen_file)
         ERF, ERF_fut = load_forcing_data(forcing_scenario_path)
@@ -98,9 +104,9 @@ def main(krakatwoa=False, save_filename='outputs/upper_ocean_projection_volcanic
         proj_lower = model.upper_ocean_temp(t=len(ERF_fut), alpha=alpha_val-1.96*0.048, F=ERF_fut, krakatwoa=krakatwoa)
 
         ## plot and save ouputs
-        fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-3]), fig=fig, ax=ax)
-        fig, ax = plot_model(years_fut, proj_upper, label=None, fig=fig, ax=ax)
-        fig, ax = plot_model(years_fut, proj_lower, label=None, fig=fig, ax=ax)
+        fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-3]), fig=fig, ax=ax, color=COLORS[ind])
+        fig, ax = plot_model(years_fut, proj_upper, label=None, fig=fig, ax=ax, alpha=.4, color=COLORS[ind])
+        fig, ax = plot_model(years_fut, proj_lower, label=None, fig=fig, ax=ax, alpha=.4, color=COLORS[ind])
     fig.savefig(save_filename, bbox_inches='tight', dpi=300)
     plt.close()
 
