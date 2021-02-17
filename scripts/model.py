@@ -45,6 +45,10 @@ def upper_ocean_temp(t, alpha, F=None):
         T_u[i+1] = (1/C_u)*(F[i] - (alpha+gamma)*T_u[i] + T_d[i])*dt + T_u[i]
         T_d[i+1] = (gamma/C_d)*(T_u[i]-T_d[i])*dt + T_d[i]
     
+    start = 1961 - 1850
+    end = 1990 - 1850
+    T_u = T_u - np.mean(T_u[start:end])
+
     return T_u
 
 
@@ -53,3 +57,4 @@ def opt_alpha(temp_anom, F, t=171):
     params = mod.make_params(alpha=1)
     fit_result = mod.fit(temp_anom, params, t=t)
     return fit_result.params['alpha'].value, fit_result.params['alpha'].stderr
+

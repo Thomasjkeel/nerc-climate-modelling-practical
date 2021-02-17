@@ -21,17 +21,16 @@ def calc_anomaly(data, num_years):
         years = np.append(years, float(data[row][0]))
         anom = np.append(anom, float(data[row][1]))
 
-    # convert to temperature anomaly from 1850
-    anom = anom - anom[0]
     return anom
 
 
 def plot_model(years, model,  label, ax=None, fig=None):
     if not ax:
-        fig, ax = plt.subplots(1)
+        fig, ax = plt.subplots(1, figsize=(8,6))
+    fig.set_figheight(6)
     plt.plot(years, model, label=label)
-    plt.xlabel('Year', fontsize=12)
-    plt.ylabel('Temperature Anomaly (K)', fontsize=12)
+    plt.xlabel('Year', fontsize=14)
+    plt.ylabel('Temperature Anomaly (K)', fontsize=14)
     plt.legend()
     return fig, ax
 
@@ -60,7 +59,6 @@ def main():
     t_fut = np.array(range(0,251), dtype='int64')
     years_fut = t_fut + 1850
     
-
     ## file locations
     data_dir = './data'
     filename = 'hadCRUT_data.txt'
@@ -70,40 +68,30 @@ def main():
     data_path = os.path.join(data_dir, filename)
     model_data_used = load_data(data_path)
     temp_anom = calc_anomaly(model_data_used, num_years=171)
+    data_dir = 'data'
+    ERF_data = pd.read_csv(os.path.join(data_dir, 'SSPs/','ERF_ssp585_1750-2500.csv'))
+    ERF_data = ERF_data.set_index('year')
+    ERF = np.array(ERF_data.loc[1850:2020]['total'])
     
     ## initialise_plot
     fig, ax = plt.subplots(1, figsize=(10,10))
-    fig, ax = plot_model(years, temp_anom, label='HadCRUT temperature  anomaly', fig=fig, ax=ax)
+    fig, ax = plot_model(years, temp_anom, label='HadCRUT temperature anomaly', fig=fig, ax=ax)
+    projection = model.upper_ocean_temp(t=len(ERF), alpha=1.155, F=ERF)
+    fig, ax = plot_model(years, projection, label='2 Layer Ocean Model', fig=fig, ax=ax)
 
     ## run model under different forcing scenarios
-    for scen_file in os.listdir(path_to_ssp_forcings):
+    # for scen_file in os.listdir(path_to_ssp_forcings):
+    #     forcing_scenario_path = os.path.join(path_to_ssp_forcings, scen_file)
+    #     ERF, ERF_fut = load_forcing_data(forcing_scenario_path)
+    #     projection = model.upper_ocean_temp(t=len(ERF_fut), alpha=opt_alpha_val, F=ERF_fut)
+    #     proj_upper = model.upper_ocean_temp(t=len(ERF_fut), alpha=opt_alpha_val+1.96*0.048, F=ERF_fut)
+    #     proj_lower = model.upper_ocean_temp(t=len(ERF_fut), alpha=opt_alpha_val-1.96*0.048, F=ERF_fut)
 
-        forcing_scenario_path = os.path.join(path_to_ssp_forcings, scen_file)
-        ERF, ERF_fut = load_forcing_data(forcing_scenario_path)
-<<<<<<< HEAD
-        projection = model.upper_ocean_temp(t=len(ERF_fut), alpha=opt_alpha_val, F=ERF_fut)
-        proj_upper = model.upper_ocean_temp(t=len(ERF_fut), alpha=opt_alpha_val+1.96*0.048, F=ERF_fut)
-        proj_lower = model.upper_ocean_temp(t=len(ERF_fut), alpha=opt_alpha_val-1.96*0.048, F=ERF_fut)
-
-        ## plot and save ouputs
-        fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-3]), fig=fig, ax=ax)
-        fig, ax = plot_model(years_fut, proj_upper, label=None, fig=fig, ax=ax)
-        fig, ax = plot_model(years_fut, proj_lower, label=None, fig=fig, ax=ax)
+    #     ## plot and save ouputs
+    #     fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-3]), fig=fig, ax=ax)
+    #     fig, ax = plot_model(years_fut, proj_upper, label=None, fig=fig, ax=ax)
+    #     fig, ax = plot_model(years_fut, proj_lower, label=None, fig=fig, ax=ax)
     fig.savefig('outputs/test9.png', bbox_inches='tight', dpi=300)
-=======
-        alpha_val, alpha_stderr = model.get_opt_model(temp_anom=temp_anom, F=ERF)
-        # upper_alpha, lower_alpha = calc_confidence_interval(alpha_val, alpha_stderr)
-        # upper_alpha_proj = model.upper_ocean_temp(t=len(ERF_fut), alpha=upper_alpha, F=ERF_fut)
-        # lower_alpha_proj = model.upper_ocean_temp(t=len(ERF_fut), alpha=lower_alpha, F=ERF_fut)
-        
-        projection = model.upper_ocean_temp(t=len(ERF_fut), alpha=alpha_val, F=ERF_fut)
-        upper_conf, lower_conf = calc_confidence_interval(projection)
-
-        ## plot and save ouputs
-        fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-4]), fig=fig, ax=ax)
-
-    fig.savefig('outputs/upper_ocean_projection.png', bbox_inches='tight', dpi=300)
->>>>>>> 8dee0c29b0f38e85310bf98eee427b46fc5d3642
 
 
 if __name__ == '__main__':
