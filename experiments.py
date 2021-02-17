@@ -43,6 +43,8 @@ def plot_model(years, model,  label, ax=None, fig=None, **kwargs):
 def load_forcing_data(filename):
     ERF_data = pd.read_csv(filename)
     ERF_data = ERF_data.set_index('year')
+    plot_volcanic_record(ERF_data)
+    
     KRAK_VALS[1883] = ERF_data['volcanic'][KRAKATOA_YEAR]
     KRAK_VALS[1884] = ERF_data['volcanic'][KRAKATOA_YEAR+1]
     KRAK_VALS[1885] = ERF_data['volcanic'][KRAKATOA_YEAR+2]
@@ -50,7 +52,7 @@ def load_forcing_data(filename):
 
     past_volcanic_record = len(ERF_data['volcanic'].loc[1850:2024]) 
     new_vals = list(ERF_data['total'].loc[:2024].values)
-    new_vals.extend(ERF_data['total'].loc[2025:2024+past_volcanic_record].values + ERF_data['volcanic'].loc[1850:2024].values)
+    new_vals.extend(ERF_data['total'].loc[2024:2023+past_volcanic_record].values + ERF_data['volcanic'].loc[1850:2024].values)
     new_vals.extend(ERF_data['total'].loc[2024+past_volcanic_record+1:].values)
     ERF_data['total'] = new_vals
 
@@ -66,6 +68,19 @@ def calc_confidence_interval(data):
     upper_conf_int = x_bar + 1.960 * st_dev/np.sqrt(n)
     lower_conf_int = x_bar - 1.960 * st_dev/np.sqrt(n)
     return upper_conf_int, lower_conf_int
+
+
+def plot_volcanic_record(data):
+    past_volcanic_record = len(data['volcanic'].loc[1850:2024]) 
+
+    fig, ax = plt.subplots(1, figsize=(10, 6))
+    data['volcanic'].loc[1850:2024].plot(ax=ax)
+    ax.plot(np.arange(2024,2024+past_volcanic_record), data['volcanic'].loc[1850:2024].values)
+    
+    plt.savefig('outputs/volcanic_record_extended.png', bbox_inches='tight')
+    plt.close()
+
+    
 
 
 def main(krakatwoa=False, save_filename='outputs/upper_ocean_projection_volcanic.png'):
@@ -104,7 +119,7 @@ def main(krakatwoa=False, save_filename='outputs/upper_ocean_projection_volcanic
         proj_lower = model.upper_ocean_temp(t=len(ERF_fut), alpha=alpha_val-1.96*0.048, F=ERF_fut, krakatwoa=krakatwoa)
 
         ## plot and save ouputs
-        fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-3]), fig=fig, ax=ax, color=COLORS[ind])
+        fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-16].replace('_', '–').upper()), fig=fig, ax=ax, color=COLORS[ind])
         fig, ax = plot_model(years_fut, proj_upper, label=None, fig=fig, ax=ax, alpha=.4, color=COLORS[ind])
         fig, ax = plot_model(years_fut, proj_lower, label=None, fig=fig, ax=ax, alpha=.4, color=COLORS[ind])
     fig.savefig(save_filename, bbox_inches='tight', dpi=300)
