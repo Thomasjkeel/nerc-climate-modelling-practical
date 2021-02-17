@@ -52,7 +52,7 @@ def upper_ocean_temp(t, alpha, F=None, krakatwoa=False):
                 F[i] += (KRAK_VALS[KRAKATOA_YEAR+2] * 2)
             if i == 203:
                 F[i] += (KRAK_VALS[KRAKATOA_YEAR+3] * 2)
-        T_u[i+1] = (1/C_u)*(F[i] - (alpha+gamma)*T_u[i] + T_d[i])*dt + T_u[i]
+        T_u[i+1] = (1/C_u)*(F[i] - (alpha+gamma)*T_u[i] + T_d[i]*gamma)*dt + T_u[i]
         T_d[i+1] = (gamma/C_d)*(T_u[i]-T_d[i])*dt + T_d[i]
     T_u = T_u - np.mean(T_u[start_point:end_point])
     return T_u

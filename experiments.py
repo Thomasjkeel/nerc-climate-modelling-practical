@@ -5,6 +5,7 @@ from scripts import model
 from scripts.model import KRAK_VALS, KRAKATOA_YEAR
 import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.patches as mpatches
 
 ## GLOBALS
 FORCING_SENSITIVITY = 1
@@ -24,20 +25,7 @@ def calc_anomaly(data, num_years):
     for row in range(num_years):
         years = np.append(years, float(data[row][0]))
         anom = np.append(anom, float(data[row][1]))
-
     return anom
-
-
-def plot_model(years, model,  label, ax=None, fig=None, **kwargs):
-    if not ax:
-        fig, ax = plt.subplots(1)
-    plt.plot(years, model, label=label, **kwargs)
-    plt.hlines(0,1850,2100, linestyle='--', color='k')
-    plt.xlim(1850, 2100)
-    plt.xlabel('Year', fontsize=12)
-    plt.ylabel('Temperature Anomaly (K)', fontsize=12)
-    plt.legend()
-    return fig, ax
 
 
 def load_forcing_data(filename):
@@ -70,17 +58,41 @@ def calc_confidence_interval(data):
     return upper_conf_int, lower_conf_int
 
 
+def plot_model(years, model, ax=None, fig=None, legend=True, **kwargs):
+    if not ax:
+        fig, ax = plt.subplots(1)
+    plt.plot(years, model, **kwargs)
+    plt.hlines(0,1850,2100, linestyle='--', color='k')
+    plt.xlim(1850, 2100)
+    plt.xlabel('Year', fontsize=12)
+    plt.ylabel('Temperature Anomaly (K)', fontsize=12)
+    if legend:
+        plt.legend()
+    return fig, ax
+
+
 def plot_volcanic_record(data):
     past_volcanic_record = len(data['volcanic'].loc[1850:2024]) 
 
     fig, ax = plt.subplots(1, figsize=(10, 6))
     data['volcanic'].loc[1850:2024].plot(ax=ax)
     ax.plot(np.arange(2024,2024+past_volcanic_record), data['volcanic'].loc[1850:2024].values)
-    
     plt.savefig('outputs/volcanic_record_extended.png', bbox_inches='tight')
     plt.close()
 
-    
+def plot_temp_anom(data, data2):
+    fig, ax = plt.subplots(1, figsize=(8, 6))
+    ax.plot(np.arange(1850,2021), data, marker='s', label='HadCRUT surface temperature')
+    ax.plot(np.arange(1850,2101),data2, label='SSP5 projection')
+    plt.hlines(0,1850,2020, linestyle='--', color='k')
+    plt.xlim(1850, 2020)
+    plt.xlabel('Year', fontsize=12)
+    plt.ylabel('\Delta Temperature Anomaly (K)', fontsize=12)
+    plt.title("HadCRUT global 2 m temperature anomaly (relative to 1961-1990)")
+    plt.legend(loc='upper left')
+    plt.savefig('outputs/hadCRUT_time.png', bbox_inches='tight')
+    plt.close()
+
 
 
 def main(krakatwoa=False, save_filename='outputs/upper_ocean_projection_volcanic.png'):
@@ -101,10 +113,12 @@ def main(krakatwoa=False, save_filename='outputs/upper_ocean_projection_volcanic
     model_data_used = load_data(data_path)
     temp_anom = calc_anomaly(model_data_used, num_years=171)
     
+
     ## initialise_plot
     fig, ax = plt.subplots(1, figsize=(10,6))
     fig, ax = plot_model(years, temp_anom, label='HadCRUT temperature  anomaly', fig=fig, ax=ax, marker='s', markersize=2, linewidth=1)
     COLORS = ['#f7564a', '#e6ac1c', '#5963f0']
+    
 
     ## run model under different forcing scenarios
     scenario_files = sorted(os.listdir(path_to_ssp_forcings), reverse=True)
@@ -117,13 +131,41 @@ def main(krakatwoa=False, save_filename='outputs/upper_ocean_projection_volcanic
         projection = model.upper_ocean_temp(t=len(ERF_fut), alpha=alpha_val, F=ERF_fut, krakatwoa=krakatwoa)
         proj_upper = model.upper_ocean_temp(t=len(ERF_fut), alpha=alpha_val+1.96*0.048, F=ERF_fut, krakatwoa=krakatwoa)
         proj_lower = model.upper_ocean_temp(t=len(ERF_fut), alpha=alpha_val-1.96*0.048, F=ERF_fut, krakatwoa=krakatwoa)
+        if not krakatwoa:
+            ## IPCC
+            low_proj = model.upper_ocean_temp(t=len(ERF_fut), alpha=1.04-0.36, F=ERF_fut, krakatwoa=krakatwoa)
+            high_proj = model.upper_ocean_temp(t=len(ERF_fut), alpha=1.04+0.36, F=ERF_fut, krakatwoa=krakatwoa)
+            fig, ax = plot_model(years_fut, low_proj, fig=fig, ax=ax, alpha=.2, linestyle='--',  color=COLORS[ind], legend=False)
+            fig, ax = plot_model(years_fut, high_proj, fig=fig, ax=ax, alpha=.2, linestyle='--', color=COLORS[ind], legend=False)
+            ax.add_patch(mpatches.Rectangle((2105,low_proj.max()),2, (high_proj.max()- low_proj.max()),facecolor=COLORS[ind],
+                              clip_on=False,linewidth = 0,  alpha=.7))
+            plt.text(2108, (high_proj.max() + low_proj.max())/2, '%s – RCP %s.%s' % (scen_file[4:8].upper(), scen_file[8:9], scen_file[9:10]), color=COLORS[ind])
 
+
+        
         ## plot and save ouputs
         fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-16].replace('_', '–').upper()), fig=fig, ax=ax, color=COLORS[ind])
         fig, ax = plot_model(years_fut, proj_upper, label=None, fig=fig, ax=ax, alpha=.4, color=COLORS[ind])
         fig, ax = plot_model(years_fut, proj_lower, label=None, fig=fig, ax=ax, alpha=.4, color=COLORS[ind])
     fig.savefig(save_filename, bbox_inches='tight', dpi=300)
     plt.close()
+
+    ## plot temp anomaly
+    plot_temp_anom(temp_anom,projection)
+    
+    ## TODO: move following somewhere 
+    # with SSP5 -> plot value range from IPCC
+    if not krakatwoa:
+        low_proj = model.upper_ocean_temp(t=len(ERF_fut), alpha=1.04-0.36, F=ERF_fut, krakatwoa=krakatwoa)
+        high_proj = model.upper_ocean_temp(t=len(ERF_fut), alpha=1.04+0.36, F=ERF_fut, krakatwoa=krakatwoa)
+
+        ## plot and save ouputs
+        fig, ax = plt.subplots(1, figsize=(10,6))
+        fig, ax = plot_model(years_fut, low_proj, label='Low alpha', fig=fig, ax=ax, color=COLORS[ind])
+        fig, ax = plot_model(years_fut, projection, label='%s' % (scen_file[:-16].replace('_', '–').upper()), fig=fig, ax=ax, color=COLORS[ind])
+        fig, ax = plot_model(years_fut, high_proj, label='High alpha', fig=fig, ax=ax, alpha=.4, color=COLORS[ind])
+        fig.savefig('outputs/comparison_with_ipcc_alpha_range.png', bbox_inches='tight', dpi=300)
+        plt.close()
 
 
 if __name__ == '__main__':
