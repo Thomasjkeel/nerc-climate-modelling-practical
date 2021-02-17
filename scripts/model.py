@@ -3,11 +3,19 @@ import pandas as pd
 import os
 import lmfit
 
+global KRAK_VALS, KRAKATOA_YEAR
+KRAK_VALS = {}
+KRAKATOA_YEAR = 1883
+
 # set constants
 data_dir = 'data'
 ERF_data = pd.read_csv(os.path.join(data_dir, 'SSPs/','ERF_ssp585_1750-2500.csv'))
 ERF_data = ERF_data.set_index('year')
 ERF = np.array(ERF_data.loc[1850:2020]['total'])
+
+    
+start_point = 1961-1850
+end_point = 1990 -1850
 
 rho = 1000 # density of water kgm-3
 c_p = 4218 # specific heat of water Jkg-1K-1
@@ -34,13 +42,19 @@ def upper_ocean_temp(t, alpha, F=None):
         F = ERF
     T_u = np.zeros(t)
     T_d = np.zeros(t)
-    
+
     for i in range(t-1):
-        # if i == 200:
-        #     F[i] -= 8
+        if i == 200:
+            F[i] += (KRAK_VALS[KRAKATOA_YEAR] * 2)
+        if i == 201:
+            F[i] += (KRAK_VALS[KRAKATOA_YEAR+1] * 2)
+        if i == 202:
+            F[i] += (KRAK_VALS[KRAKATOA_YEAR+2] * 2)
+        if i == 203:
+            F[i] += (KRAK_VALS[KRAKATOA_YEAR+3] * 2)
         T_u[i+1] = (1/C_u)*(F[i] - (alpha+gamma)*T_u[i] + T_d[i])*dt + T_u[i]
         T_d[i+1] = (gamma/C_d)*(T_u[i]-T_d[i])*dt + T_d[i]
-    
+    T_u = T_u - np.mean(T_u[start_point:end_point])
     return T_u
 
 
