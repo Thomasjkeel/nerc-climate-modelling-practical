@@ -199,7 +199,7 @@ if __name__ == '__main__':
     counter = 2
     fig, axes = plt.subplots(1, 3, sharey=True, figsize=(7,4))
     for ax, scen in zip(axes, different_scenarios):
-        ax.set_title(scen.upper(), size=14)
+        ax.set_title('S' + scen.upper(), size=14)
         ax.grid(axis='x')
         for key in VOLCANIC_RESULTS.keys():
             if scen in key:
